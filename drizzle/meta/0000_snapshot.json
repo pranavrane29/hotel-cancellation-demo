@@ -1,9 +1,76 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "f1e8be56-9ba1-4c60-8997-b453f8118ecd",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "cc2fb9bf-f45c-4023-80c9-627ce7b20ab1",
+  "prevId": "f1e8be56-9ba1-4c60-8997-b453f8118ecd",
   "tables": {
+    "predictionHistory": {
+      "name": "predictionHistory",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "bookingDetails": {
+          "name": "bookingDetails",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cancellationProbability": {
+          "name": "cancellationProbability",
+          "type": "double",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "confidence": {
+          "name": "confidence",
+          "type": "double",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "riskLabel": {
+          "name": "riskLabel",
+          "type": "enum('Low','Medium','High')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recommendation": {
+          "name": "recommendation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "predictionHistory_id": {
+          "name": "predictionHistory_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
     "users": {
       "name": "users",
       "columns": {
