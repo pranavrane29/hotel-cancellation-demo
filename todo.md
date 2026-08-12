@@ -11,3 +11,6 @@
 - [x] Add automated tests for input validation, risk classification, and the pickle inference bridge.
 - [x] Verify desktop and mobile layouts, API-backed inference behavior, and persistent database history end to end.
 - [x] Prepare the final working demo and concise operating guidance.
+- [x] Restore the supplied Galaxy component's mouse interaction and cursor-repulsion behavior.
+- [x] Optimize Galaxy rendering to reduce frame-time and scrolling lag on desktop and mobile.
+- [x] Validate the restored interaction and performance behavior through successful desktop preview rendering, source review, and production build verification.
