@@ -21,3 +21,8 @@
 - [x] Build the responsive heart-risk interface and integrate the supplied animation components.
 - [x] Add production-oriented safeguards, automated tests, and end-to-end verification.
 - [x] Deliver the heart-risk demo with setup and operating guidance.
+- [x] Add the supplied Pill Nav and Line Sidebar navigation treatments to the Cardia interface.
+- [x] Add supplied Masked Heading, Gradual Blur, and Scroll Velocity section treatments.
+- [x] Add supplied Click Spark, Specular Button, Star Border, and Animated List interactions without compromising clinical clarity.
+- [x] Verify all added animations respect reduced-motion preferences and preserve mobile performance.
+- [x] Add complete reduced-motion fallbacks for pointer-driven navigation and specular button effects, then verify the preference at runtime.
