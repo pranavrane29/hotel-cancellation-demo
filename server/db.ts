@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertPredictionHistory, InsertUser, predictionHistory, users } from "../drizzle/schema";
+import { heartRiskHistory, InsertHeartRiskHistory, InsertPredictionHistory, InsertUser, predictionHistory, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -101,4 +101,18 @@ export async function listPredictionHistory(limit: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(predictionHistory).orderBy(desc(predictionHistory.createdAt)).limit(limit);
+}
+
+export async function createHeartRiskHistory(record: InsertHeartRiskHistory) {
+  const db = await getDb();
+  if (!db) return null;
+  await db.insert(heartRiskHistory).values(record);
+  const rows = await db.select().from(heartRiskHistory).orderBy(desc(heartRiskHistory.createdAt)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function listHeartRiskHistory(limit: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(heartRiskHistory).orderBy(desc(heartRiskHistory.createdAt)).limit(limit);
 }

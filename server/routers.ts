@@ -1,22 +1,30 @@
 import { COOKIE_NAME } from "@shared/const";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
-import { createPredictionHistory, listPredictionHistory } from "./db";
-import { predictCancellation, type BookingInput } from "./prediction";
+import { adminProcedure, publicProcedure, router } from "./_core/trpc";
+import { createHeartRiskHistory, listHeartRiskHistory } from "./db";
+import { predictHeartRisk, type HeartInput } from "./heartPrediction";
 
-const bookingInputSchema = z.object({
-  hotel: z.enum(["City Hotel", "Resort Hotel"]), leadTime: z.number().int().min(0).max(730), arrivalYear: z.number().int().min(2015).max(2017),
-  arrivalMonth: z.enum(["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]),
-  arrivalWeek: z.number().int().min(1).max(53), arrivalDay: z.number().int().min(1).max(31), weekendNights: z.number().int().min(0).max(60), weekNights: z.number().int().min(0).max(60),
-  adults: z.number().int().min(1).max(20), children: z.number().int().min(0).max(20), babies: z.number().int().min(0).max(10), meal: z.enum(["BB", "HB", "FB", "SC", "Undefined"]),
-  country: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/), marketSegment: z.enum(["Direct", "Corporate", "Online TA", "Offline TA/TO", "Complementary", "Groups", "Aviation"]),
-  distributionChannel: z.enum(["Direct", "Corporate", "TA/TO", "GDS"]), repeatedGuest: z.boolean(), previousCancellations: z.number().int().min(0).max(100),
-  previousBookingsNotCanceled: z.number().int().min(0).max(1_000), reservedRoomType: z.string().regex(/^[A-L]$/), assignedRoomType: z.string().regex(/^[A-P]$/),
-  bookingChanges: z.number().int().min(0).max(100), depositType: z.enum(["No Deposit", "Non Refund", "Refundable"]), customerType: z.enum(["Transient", "Transient-Party", "Contract", "Group"]),
-  averageDailyRate: z.number().min(0).max(100_000), parkingSpaces: z.number().int().min(0).max(5), specialRequests: z.number().int().min(0).max(5), waitingListDays: z.number().int().min(0).max(1_000),
+const heartInputSchema = z.object({
+  age: z.number().int().min(18).max(120), sex: z.enum(["M", "F"]), chestPainType: z.enum(["ATA", "NAP", "ASY", "TA"]),
+  restingBP: z.number().int().min(50).max(300), cholesterol: z.number().int().min(0).max(1_000), fastingBS: z.union([z.literal(0), z.literal(1)]),
+  restingECG: z.enum(["Normal", "ST", "LVH"]), maxHR: z.number().int().min(30).max(260), exerciseAngina: z.enum(["Y", "N"]),
+  oldpeak: z.number().min(-10).max(15), stSlope: z.enum(["Up", "Flat", "Down"]), consentAcknowledged: z.literal(true),
 });
+
+const requestWindows = new Map<string, { count: number; resetsAt: number }>();
+function consumePredictionSlot(address: string) {
+  const now = Date.now();
+  const window = requestWindows.get(address);
+  if (!window || window.resetsAt < now) {
+    requestWindows.set(address, { count: 1, resetsAt: now + 60_000 });
+    return;
+  }
+  if (window.count >= 10) throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Please wait a minute before submitting another screening request." });
+  window.count += 1;
+}
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -31,13 +39,17 @@ export const appRouter = router({
       } as const;
     }),
   }),
-  prediction: router({
-    predict: publicProcedure.input(bookingInputSchema).mutation(async ({ input }) => {
-      const assessment = await predictCancellation(input as BookingInput);
-      const record = await createPredictionHistory({ bookingDetails: input, cancellationProbability: assessment.cancellationProbability, confidence: assessment.confidence, riskLabel: assessment.riskLabel, recommendation: assessment.recommendation });
+  heartRisk: router({
+    predict: publicProcedure.input(heartInputSchema).mutation(async ({ input, ctx }) => {
+      const forwarded = ctx.req.headers["x-forwarded-for"];
+      const clientAddress = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(",")[0]?.trim() || ctx.req.socket?.remoteAddress || "anonymous";
+      consumePredictionSlot(clientAddress);
+      const assessment = await predictHeartRisk(input as HeartInput);
+      const { consentAcknowledged, ...inputSummary } = input;
+      const record = await createHeartRiskHistory({ inputSummary, heartDiseaseProbability: assessment.heartDiseaseProbability, confidence: assessment.confidence, signal: assessment.signal, consentAcknowledged });
       return { ...assessment, id: record?.id ?? null, createdAt: record?.createdAt ?? new Date() };
     }),
-    history: publicProcedure.input(z.object({ limit: z.number().int().min(1).max(50) }).optional()).query(({ input }) => listPredictionHistory(input?.limit ?? 10)),
+    history: adminProcedure.input(z.object({ limit: z.number().int().min(1).max(20) }).optional()).query(({ input }) => listHeartRiskHistory(input?.limit ?? 8)),
   }),
 });
 

@@ -14,3 +14,10 @@
 - [x] Restore the supplied Galaxy component's mouse interaction and cursor-repulsion behavior.
 - [x] Optimize Galaxy rendering to reduce frame-time and scrolling lag on desktop and mobile.
 - [x] Validate the restored interaction and performance behavior through successful desktop preview rendering, source review, and production build verification.
+- [x] Provide step-by-step Render deployment guidance for the existing GitHub repository, Python model runtime, and external database setup.
+- [x] Inspect the supplied heart-disease model package and animation components.
+- [x] Define a clinically responsible heart-risk demo flow, input contract, security boundaries, and disclaimer.
+- [x] Implement server-side model inference, validated input handling, and persistent prediction records.
+- [x] Build the responsive heart-risk interface and integrate the supplied animation components.
+- [x] Add production-oriented safeguards, automated tests, and end-to-end verification.
+- [x] Deliver the heart-risk demo with setup and operating guidance.

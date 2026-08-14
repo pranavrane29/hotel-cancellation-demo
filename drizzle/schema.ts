@@ -1,4 +1,4 @@
-import { double, int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, double, int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -37,3 +37,16 @@ export const predictionHistory = mysqlTable("predictionHistory", {
 
 export type PredictionHistory = typeof predictionHistory.$inferSelect;
 export type InsertPredictionHistory = typeof predictionHistory.$inferInsert;
+
+export const heartRiskHistory = mysqlTable("heartRiskHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  inputSummary: json("inputSummary").notNull(),
+  heartDiseaseProbability: double("heartDiseaseProbability").notNull(),
+  confidence: double("confidence").notNull(),
+  signal: mysqlEnum("signal", ["Lower", "Elevated"]).notNull(),
+  consentAcknowledged: boolean("consentAcknowledged").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type HeartRiskHistory = typeof heartRiskHistory.$inferSelect;
+export type InsertHeartRiskHistory = typeof heartRiskHistory.$inferInsert;

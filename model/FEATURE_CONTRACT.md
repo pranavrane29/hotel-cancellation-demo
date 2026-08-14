@@ -1,25 +1,33 @@
-# Hotel Cancellation Model Feature Contract
+# Cardia Heart-Risk Model Contract
+
+## Purpose and boundary
+
+This application demonstrates a binary Logistic Regression screening model trained on the supplied heart-disease dataset. The model output is a **model probability**, not a medical diagnosis, clinical triage outcome, or emergency decision. The interface must never collect names, contact information, addresses, dates of birth, or other direct identifiers.
 
 ## Runtime artifacts
 
-The server-side model consists of `hotel_booking_model.pkl`, `scaler.pkl`, and `columns.pkl`. The model was serialized with **scikit-learn 1.6.1**. The inference runtime requires the compatible `pandas`, `numpy`, `joblib`, and scikit-learn versions pinned in `model/requirements.txt`.
+The server loads the user-supplied artifacts at `model/heart/heart_model.pkl`, `model/heart/scaler.pkl`, and `model/heart/columns.pkl`. The Python bridge uses `pandas`, `numpy`, `joblib`, and `scikit-learn` to one-hot encode the supplied fields, align them to the serialized training columns, apply the scaler, and return the probability associated with target class `1`.
 
-## Required booking fields
+## Required input contract
 
-| Interface field | Model field | Accepted values or bounds |
+| Interface field | Model field | Allowed values |
 |---|---|---|
-| Hotel | `hotel` | `City Hotel`, `Resort Hotel` |
-| Lead time | `lead_time` | Integer, 0–730 days |
-| Arrival date | `arrival_date_year`, `arrival_date_month`, `arrival_date_week_number`, `arrival_date_day_of_month` | Years 2015–2017; full English month; week 1–53; day 1–31 |
-| Stay length | `stays_in_weekend_nights`, `stays_in_week_nights` | Integers, 0–60 nights each |
-| Guests | `adults`, `children`, `babies` | Adults 1–20; children 0–20; babies 0–10 |
-| Meal plan | `meal` | `BB`, `HB`, `FB`, `SC`, `Undefined` |
-| Booking source | `country`, `market_segment`, `distribution_channel` | Three-letter country code and model-supported category values |
-| Guest history | `is_repeated_guest`, `previous_cancellations`, `previous_bookings_not_canceled` | Boolean plus non-negative counts |
-| Room details | `reserved_room_type`, `assigned_room_type` | Reserved A–L; assigned A–P |
-| Payment and changes | `booking_changes`, `deposit_type`, `customer_type`, `adr` | Non-negative changes/rate and model-supported category values |
-| Arrival preferences | `required_car_parking_spaces`, `total_of_special_requests`, `days_in_waiting_list` | Parking 0–5; requests 0–5; wait-list days 0–1,000 |
+| Age | `Age` | Integer 18–120 |
+| Recorded sex | `Sex` | `M`, `F` |
+| Chest pain type | `ChestPainType` | `ATA`, `NAP`, `ASY`, `TA` |
+| Resting blood pressure | `RestingBP` | Integer 50–300 mm Hg |
+| Cholesterol | `Cholesterol` | Integer 0–1,000 mg/dL |
+| Fasting blood sugar | `FastingBS` | `0`, `1` |
+| Resting ECG | `RestingECG` | `Normal`, `ST`, `LVH` |
+| Maximum heart rate | `MaxHR` | Integer 30–260 |
+| Exercise angina | `ExerciseAngina` | `Y`, `N` |
+| ST depression | `Oldpeak` | Number −10–15 |
+| ST slope | `ST_Slope` | `Up`, `Flat`, `Down` |
 
-## Preprocessing and response
+## Interpretation contract
 
-The Python bridge converts one submitted booking to a dataframe, applies one-hot encoding with `pandas.get_dummies`, reindexes it against `columns.pkl` with zero-fill for absent categories, then applies `scaler.pkl` before calling `predict_proba`. The probability attached to model class `1` is the cancellation probability. The application renders the result as **Low** below 35%, **Medium** from 35% to below 65%, and **High** at 65% or higher.
+The model uses a probability threshold of 50% for the presentation layer. Values below 50% display a **Lower** model signal; values at or above 50% display an **Elevated** model signal. Both screens explicitly state that the result requires clinician interpretation and is not a diagnosis.
+
+## Persistence contract
+
+Only the required model fields, computed probability, confidence, signal, acknowledgement, and timestamp are saved to `heartRiskHistory`. The demo does not request or store direct identifiers. Historical screening details are not exposed to public visitors; the router restricts the history procedure to authenticated administrative access.
